@@ -1,0 +1,10 @@
+{
+	"id": "com.stark.moonlight",
+	"version": "0.1.0",
+	"vendor": "Stark",
+	"type": "pdk",
+	"main": "moonlight",
+	"title": "Moonlight",
+	"icon": "icon.png",
+	"miniicon": "icon.png"
+}

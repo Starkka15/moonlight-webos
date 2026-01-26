@@ -1,0 +1,19 @@
+# Build artifacts
+build/
+moonlight
+staging/
+*.ipk
+*.o
+
+# Dependencies (built separately)
+curl-7.88.1/
+curl-7.88.1.tar.gz
+sysroot/
+deps/
+ffmpeg-4.4.4/
+ffmpeg-4.4.4.tar.xz
+
+# Editor files
+*.swp
+*~
+.vscode/

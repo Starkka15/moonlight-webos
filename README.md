@@ -22,7 +22,7 @@ Requires:
   - opus 1.4
 
 ```bash
-git clone --recursive https://github.com/moonlight-stream/moonlight-embedded deps/moonlight-embedded
+./build-deps.sh # fetches moonlight-embedded and cross-builds the sysroot
 make            # or: make PDK=... SYSROOT=... MOONLIGHT_EMBEDDED=...
 make package    # builds the .ipk (needs palm-package)
 ```

@@ -136,6 +136,12 @@
 #error Please define your platform byteswap macros!
 #endif
 
+#ifdef WEBOS
+/* The device's glibc (2.8) has no pthread_setname_np (added in 2.12).
+   Thread names are only a debugging aid, so compile the call away. */
+#define pthread_setname_np(thread, name) ((void)0)
+#endif
+
 #if (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(__BIG_ENDIAN__)
 #define LE16(x) BSWAP16(x)
 #define LE32(x) BSWAP32(x)

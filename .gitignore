@@ -17,3 +17,7 @@ ffmpeg-4.4.4.tar.xz
 *.swp
 *~
 .vscode/
+
+# Packaging output
+build-pkg/
+*.log

@@ -2,14 +2,16 @@
 # Cross-compilation for HP TouchPad (webOS 3.0.5)
 
 # Toolchain
-PDK = /opt/PalmPDK
+PDK ?= /opt/PalmPDK
 CC = $(PDK)/arm-toolchain/bin/arm-none-linux-gnueabi-gcc
 AR = $(PDK)/arm-toolchain/bin/arm-none-linux-gnueabi-ar
 STRIP = $(PDK)/arm-toolchain/bin/arm-none-linux-gnueabi-strip
 
-# Paths
-SYSROOT = /home/stark/moonlight-webos/sysroot
-MOONLIGHT_EMBEDDED = /home/stark/moonlight-embedded
+# Paths (override on the command line: make SYSROOT=... MOONLIGHT_EMBEDDED=...)
+# SYSROOT holds the cross-built static deps (FFmpeg, curl, OpenSSL, expat, opus)
+SYSROOT ?= $(CURDIR)/sysroot
+# MOONLIGHT_EMBEDDED is a recursive checkout of moonlight-embedded
+MOONLIGHT_EMBEDDED ?= $(CURDIR)/deps/moonlight-embedded
 MOONLIGHT_COMMON = $(MOONLIGHT_EMBEDDED)/third_party/moonlight-common-c
 ENET = $(MOONLIGHT_COMMON)/enet
 REED_SOLOMON = $(MOONLIGHT_COMMON)/reedsolomon
@@ -92,9 +94,14 @@ ALL_OBJ = $(COMMON_OBJ) $(ENET_OBJ) $(RS_OBJ) $(GS_OBJ) $(H264_OBJ) $(WEBOS_OBJ)
 # Target
 TARGET = moonlight
 
-.PHONY: all clean dirs
+.PHONY: all check clean dirs
 
-all: dirs $(TARGET)
+all: check dirs $(TARGET)
+
+check:
+	@test -x $(CC) || { echo "Cross-compiler not found at $(CC); set PDK=..."; exit 1; }
+	@test -d $(MOONLIGHT_COMMON)/src || { echo "moonlight-embedded not found at $(MOONLIGHT_EMBEDDED); set MOONLIGHT_EMBEDDED=... (see README)"; exit 1; }
+	@test -d $(SYSROOT)/lib || { echo "Dependency sysroot not found at $(SYSROOT); set SYSROOT=... (see README)"; exit 1; }
 
 dirs:
 	@mkdir -p $(BUILD)/common
@@ -103,14 +110,20 @@ dirs:
 	@mkdir -p $(BUILD)/gs
 	@mkdir -p $(BUILD)/h264
 	@mkdir -p $(BUILD)/webos
+	@mkdir -p $(BUILD)/common-src
 
 $(TARGET): $(ALL_OBJ)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 	$(STRIP) $@
 
 # Pattern rules
-$(BUILD)/common/%.o: $(MOONLIGHT_COMMON)/src/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+# moonlight-common-c is compiled from a copy with our patched headers laid
+# over it: its sources include their headers from their own directory, so
+# -Iinclude alone would not reach them.
+$(BUILD)/common/%.o: $(MOONLIGHT_COMMON)/src/%.c $(wildcard include/*.h)
+	@cp $(MOONLIGHT_COMMON)/src/*.c $(MOONLIGHT_COMMON)/src/*.h $(BUILD)/common-src/
+	@cp include/*.h $(BUILD)/common-src/
+	$(CC) $(CFLAGS) -c -o $@ $(BUILD)/common-src/$*.c
 
 $(BUILD)/enet/%.o: $(ENET)/%.c
 	$(CC) $(CFLAGS) -I$(ENET)/include -c -o $@ $<

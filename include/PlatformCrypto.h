@@ -5,8 +5,9 @@
 #ifdef USE_MBEDTLS
 #include <mbedtls/cipher.h>
 #else
-// Hide the real OpenSSL definition from other code
-typedef struct evp_cipher_ctx_st EVP_CIPHER_CTX;
+// webOS: GCC 4.5.2 rejects a repeated typedef, so take OpenSSL's own
+// instead of forward-declaring it
+#include <openssl/ossl_typ.h>
 #endif
 
 typedef struct _PLT_CRYPTO_CONTEXT {
